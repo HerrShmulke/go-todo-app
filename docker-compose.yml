@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    
+    ports:
+      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+
+    volumes:
+      - ./:/app
+      - go-modules:/go/pkg/mod
+    
+    environment:
+      HTTP_PORT: ${HTTP_PORT:-8080}
+
+volumes:
+  go-modules:
