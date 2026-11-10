@@ -14,5 +14,7 @@ func NewRouter(router *gin.RouterGroup, todoHandler *todo.Handler) {
 		todos.GET("/:id", todoHandler.GetById)
 		todos.DELETE("/:id", todoHandler.Delete)
 		todos.PUT("", todoHandler.Update)
+		todos.PATCH("/:id/done", todoHandler.Done)
+		todos.PATCH("/:id/undone", todoHandler.Undone)
 	}
 }

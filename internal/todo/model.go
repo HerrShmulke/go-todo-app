@@ -48,7 +48,7 @@ func (t *Todo) Update(title, description string) error {
 	return nil
 }
 
-func (t *Todo) Complete() {
+func (t *Todo) Done() {
 	if t.Completed == true {
 		return
 	}

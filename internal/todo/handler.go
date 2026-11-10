@@ -94,6 +94,30 @@ func (h *Handler) Delete(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+func (h *Handler) Done(c *gin.Context) {
+	id := c.Param("id")
+
+	todo, err := h.service.Done(c.Request.Context(), id)
+	if err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ToTodoResponse(todo))
+}
+
+func (h *Handler) Undone(c *gin.Context) {
+	id := c.Param("id")
+
+	todo, err := h.service.Undone(c.Request.Context(), id)
+	if err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ToTodoResponse(todo))
+}
+
 func (h *Handler) handleError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, ErrEmptyTitle):

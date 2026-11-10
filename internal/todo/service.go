@@ -89,3 +89,33 @@ func (s *Service) Delete(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (s *Service) Done(ctx context.Context, id string) (*Todo, error) {
+	todo, err := s.repo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	todo.Done()
+
+	if err := s.repo.Update(ctx, todo); err != nil {
+		return nil, err
+	}
+
+	return todo, nil
+}
+
+func (s *Service) Undone(ctx context.Context, id string) (*Todo, error) {
+	todo, err := s.repo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	todo.Undone()
+
+	if err := s.repo.Update(ctx, todo); err != nil {
+		return nil, err
+	}
+
+	return todo, nil
+}
