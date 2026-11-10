@@ -6,14 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type Repository interface {
-	Create(ctx context.Context, todo *Todo) error
-	GetAll(ctx context.Context) ([]Todo, error)
-	Update(ctx context.Context, todo *Todo) error
-	GetById(ctx context.Context, id string) (*Todo, error)
-	Delete(ctx context.Context, id string) error
-}
-
 type Service struct {
 	repo Repository
 }
@@ -96,6 +88,10 @@ func (s *Service) Done(ctx context.Context, id string) (*Todo, error) {
 		return nil, err
 	}
 
+	if todo.Completed {
+		return todo, nil
+	}
+
 	todo.Done()
 
 	if err := s.repo.Update(ctx, todo); err != nil {
@@ -109,6 +105,10 @@ func (s *Service) Undone(ctx context.Context, id string) (*Todo, error) {
 	todo, err := s.repo.GetById(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if !todo.Completed {
+		return todo, nil
 	}
 
 	todo.Undone()
