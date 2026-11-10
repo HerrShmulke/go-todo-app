@@ -83,11 +83,26 @@ func (h *Handler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, ToTodoResponse(todo))
 }
 
+func (h *Handler) Delete(c *gin.Context) {
+	id := c.Param("id")
+
+	if err := h.service.Delete(c.Request.Context(), id); err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func (h *Handler) handleError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, ErrEmptyTitle):
-	case errors.Is(err, ErrTodoNotFound):
 		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+
+	case errors.Is(err, ErrTodoNotFound):
+		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
 

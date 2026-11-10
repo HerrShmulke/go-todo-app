@@ -43,4 +43,15 @@ func (r *MemoryRepository) GetById(ctx context.Context, id string) (*Todo, error
 	return nil, ErrTodoNotFound
 }
 
+func (r *MemoryRepository) Delete(ctx context.Context, id string) error {
+	for i, todo := range r.todos {
+		if todo.ID == id {
+			r.todos = append(r.todos[:i], r.todos[i+1:]...)
+			return nil
+		}
+	}
+
+	return ErrTodoNotFound
+}
+
 var _ Repository = (*MemoryRepository)(nil)

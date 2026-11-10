@@ -11,6 +11,7 @@ type Repository interface {
 	GetAll(ctx context.Context) ([]Todo, error)
 	Update(ctx context.Context, todo *Todo) error
 	GetById(ctx context.Context, id string) (*Todo, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type Service struct {
@@ -79,4 +80,12 @@ func (s *Service) Update(ctx context.Context, id, title, description string) (*T
 	}
 
 	return todo, nil
+}
+
+func (s *Service) Delete(ctx context.Context, id string) error {
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	return nil
 }
