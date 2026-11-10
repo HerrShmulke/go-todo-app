@@ -52,9 +52,41 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *Handler) GetById(c *gin.Context) {
+	id := c.Param("id")
+
+	todo, err := h.service.GetById(c.Request.Context(), id)
+	if err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ToTodoResponse(todo))
+}
+
+func (h *Handler) Update(c *gin.Context) {
+	var req UpdateTodoRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid request body",
+		})
+		return
+	}
+
+	todo, err := h.service.Update(c.Request.Context(), req.ID, req.Title, req.Description)
+	if err != nil {
+		h.handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, ToTodoResponse(todo))
+}
+
 func (h *Handler) handleError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, ErrEmptyTitle):
+	case errors.Is(err, ErrTodoNotFound):
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})

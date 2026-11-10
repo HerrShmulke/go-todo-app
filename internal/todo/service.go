@@ -9,6 +9,8 @@ import (
 type Repository interface {
 	Create(ctx context.Context, todo *Todo) error
 	GetAll(ctx context.Context) ([]Todo, error)
+	Update(ctx context.Context, todo *Todo) error
+	GetById(ctx context.Context, id string) (*Todo, error)
 }
 
 type Service struct {
@@ -50,4 +52,31 @@ func (s *Service) GetAll(ctx context.Context) ([]Todo, error) {
 	}
 
 	return todos, nil
+}
+
+func (s *Service) GetById(ctx context.Context, id string) (*Todo, error) {
+	todo, err := s.repo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return todo, nil
+}
+
+func (s *Service) Update(ctx context.Context, id, title, description string) (*Todo, error) {
+	todo, err := s.repo.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = todo.Update(title, description)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.Update(ctx, todo); err != nil {
+		return nil, err
+	}
+
+	return todo, nil
 }
