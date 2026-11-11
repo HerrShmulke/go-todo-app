@@ -1,51 +1,35 @@
 package main
 
 import (
-	"context"
 	"log"
-	"todo-app/internal/config"
-	"todo-app/internal/http"
-	"todo-app/internal/storage/postgres"
-	"todo-app/internal/todo"
 
-	"github.com/gin-gonic/gin"
+	"todo-app/internal/app"
+	"todo-app/internal/config"
+
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	ctx := context.Background()
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
 
+func run() error {
 	if err := godotenv.Load(); err != nil {
 		log.Printf("No .env file found: %v", err)
 	}
 
 	cfg, err := config.LoadFromEnv()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	if err := postgres.RunMigrations(cfg.DatabaseURL); err != nil {
-		log.Fatal(err)
-	}
-
-	pool, err := postgres.NewPool(ctx, cfg.DatabaseURL)
+	application, err := app.New(cfg)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	defer pool.Close()
+	defer application.Close()
 
-	repo := postgres.NewTodoRepository(pool)
-	todoService := todo.NewService(repo)
-	todoHandler := todo.NewHandler(todoService)
-
-	router := gin.Default()
-
-	api := router.Group("/api")
-	{
-		v1 := api.Group("v1")
-
-		http.NewRouter(v1, todoHandler)
-	}
-
-	router.Run(":8080")
+	return application.Run()
 }

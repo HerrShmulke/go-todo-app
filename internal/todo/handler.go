@@ -52,10 +52,10 @@ func (h *Handler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func (h *Handler) GetById(c *gin.Context) {
+func (h *Handler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 
-	todo, err := h.service.GetById(c.Request.Context(), id)
+	todo, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
 		h.handleError(c, err)
 		return

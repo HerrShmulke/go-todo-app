@@ -11,6 +11,7 @@ type Config struct {
 	HTTPPort    int
 	DatabaseURL string
 	WorkerCount int
+	RedisAddr   string
 }
 
 func LoadFromEnv() (Config, error) {
@@ -47,9 +48,15 @@ func LoadFromEnv() (Config, error) {
 		return Config{}, errors.New("invalid WORKER_COUNT")
 	}
 
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		return Config{}, errors.New("REDIS_ADDR is empty")
+	}
+
 	return Config{
 		HTTPPort:    httpPort,
 		DatabaseURL: databaseURL,
 		WorkerCount: workerCount,
+		RedisAddr:   redisAddr,
 	}, nil
 }

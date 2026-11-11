@@ -111,7 +111,7 @@ func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
 	return nil
 }
 
-func (r *TodoRepository) GetById(ctx context.Context, id string) (*todo.Todo, error) {
+func (r *TodoRepository) GetByID(ctx context.Context, id string) (*todo.Todo, error) {
 	query := `
 		SELECT id, title, description, completed, created_at, updated_at
 		FROM todos
