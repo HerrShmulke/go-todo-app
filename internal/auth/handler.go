@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const refreshCookiePath = "/api/v1/auth"
+
 type Handler struct {
 	service *Service
 }
@@ -97,7 +99,7 @@ func (h *Handler) Logout(c *gin.Context) {
 		"refresh_token",
 		"",
 		-1,
-		"/api/auth",
+		refreshCookiePath,
 		"",
 		true,
 		true,
@@ -138,7 +140,7 @@ func (h *Handler) setRefreshCookie(c *gin.Context, t string) {
 		"refresh_token",
 		t,
 		int(refreshTokenTTL.Seconds()),
-		"/api/v1/auth",
+		refreshCookiePath,
 		"",
 		true,
 		true,
