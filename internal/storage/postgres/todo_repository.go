@@ -87,7 +87,7 @@ func (r *TodoRepository) GetAll(ctx context.Context, userID string) ([]todo.Todo
 	return items, nil
 }
 
-func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
+func (r *TodoRepository) Update(ctx context.Context, updatedTodo *todo.Todo) error {
 	query := `
 		UPDATE todos
 		SET title = $1,
@@ -97,18 +97,22 @@ func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
 		WHERE id = $5 AND user_id = $6
 	`
 
-	_, err := r.pool.Exec(
+	result, err := r.pool.Exec(
 		ctx,
 		query,
-		todo.Title,
-		todo.Description,
-		todo.Completed,
-		todo.UpdatedAt,
-		todo.ID,
-		todo.UserID,
+		updatedTodo.Title,
+		updatedTodo.Description,
+		updatedTodo.Completed,
+		updatedTodo.UpdatedAt,
+		updatedTodo.ID,
+		updatedTodo.UserID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update todo: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return todo.ErrTodoNotFound
 	}
 
 	return nil
