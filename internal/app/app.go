@@ -32,7 +32,11 @@ type App struct {
 }
 
 func New(cfg config.Config) (*App, error) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		5*time.Second,
+	)
+	defer cancel()
 
 	application := &App{}
 

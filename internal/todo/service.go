@@ -40,12 +40,7 @@ func (s *Service) Create(
 }
 
 func (s *Service) GetAll(ctx context.Context, userID string) ([]Todo, error) {
-	todos, err := s.repo.GetAll(ctx, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	return todos, nil
+	return s.repo.GetAll(ctx, userID)
 }
 
 func (s *Service) GetByID(ctx context.Context, userID string, id string) (*Todo, error) {
