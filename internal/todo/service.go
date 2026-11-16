@@ -18,6 +18,7 @@ func NewService(repo Repository) *Service {
 
 func (s *Service) Create(
 	ctx context.Context,
+	userID,
 	title,
 	description string,
 ) (*Todo, error) {
@@ -26,7 +27,7 @@ func (s *Service) Create(
 		return nil, err
 	}
 
-	todo, err := NewTodo(id.String(), title, description)
+	todo, err := NewTodo(id.String(), userID, title, description)
 	if err != nil {
 		return nil, err
 	}
@@ -38,8 +39,8 @@ func (s *Service) Create(
 	return todo, err
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]Todo, error) {
-	todos, err := s.repo.GetAll(ctx)
+func (s *Service) GetAll(ctx context.Context, userID string) ([]Todo, error) {
+	todos, err := s.repo.GetAll(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +48,8 @@ func (s *Service) GetAll(ctx context.Context) ([]Todo, error) {
 	return todos, nil
 }
 
-func (s *Service) GetByID(ctx context.Context, id string) (*Todo, error) {
-	todo, err := s.repo.GetByID(ctx, id)
+func (s *Service) GetByID(ctx context.Context, userID string, id string) (*Todo, error) {
+	todo, err := s.repo.GetByID(ctx, userID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +57,8 @@ func (s *Service) GetByID(ctx context.Context, id string) (*Todo, error) {
 	return todo, nil
 }
 
-func (s *Service) Update(ctx context.Context, id, title, description string) (*Todo, error) {
-	todo, err := s.repo.GetByID(ctx, id)
+func (s *Service) Update(ctx context.Context, userID, id, title, description string) (*Todo, error) {
+	todo, err := s.repo.GetByID(ctx, userID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -74,16 +75,16 @@ func (s *Service) Update(ctx context.Context, id, title, description string) (*T
 	return todo, nil
 }
 
-func (s *Service) Delete(ctx context.Context, id string) error {
-	if err := s.repo.Delete(ctx, id); err != nil {
+func (s *Service) Delete(ctx context.Context, userID, id string) error {
+	if err := s.repo.Delete(ctx, userID, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *Service) Done(ctx context.Context, id string) (*Todo, error) {
-	todo, err := s.repo.GetByID(ctx, id)
+func (s *Service) Done(ctx context.Context, userID, id string) (*Todo, error) {
+	todo, err := s.repo.GetByID(ctx, userID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -101,8 +102,8 @@ func (s *Service) Done(ctx context.Context, id string) (*Todo, error) {
 	return todo, nil
 }
 
-func (s *Service) Undone(ctx context.Context, id string) (*Todo, error) {
-	todo, err := s.repo.GetByID(ctx, id)
+func (s *Service) Undone(ctx context.Context, userID, id string) (*Todo, error) {
+	todo, err := s.repo.GetByID(ctx, userID, id)
 	if err != nil {
 		return nil, err
 	}

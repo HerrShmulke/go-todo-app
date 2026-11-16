@@ -28,10 +28,11 @@ func (r *TodoRepository) Create(ctx context.Context, todo *todo.Todo) error {
 		return nil
 	}
 
-	if err := r.cache.DeleteAll(ctx); err != nil {
+	if err := r.cache.DeleteAll(ctx, todo.UserID); err != nil {
 		slog.Error(
 			"failed to delete todo list from cache",
 			"operation", "create",
+			"user_id", todo.UserID,
 			"error", err,
 		)
 	}
@@ -39,13 +40,14 @@ func (r *TodoRepository) Create(ctx context.Context, todo *todo.Todo) error {
 	return nil
 }
 
-func (r *TodoRepository) GetAll(ctx context.Context) ([]todo.Todo, error) {
+func (r *TodoRepository) GetAll(ctx context.Context, userID string) ([]todo.Todo, error) {
 	if r.cache != nil {
-		todos, found, err := r.cache.GetAll(ctx)
+		todos, found, err := r.cache.GetAll(ctx, userID)
 		if err != nil {
 			slog.Error(
 				"failed to get todo list from cache",
 				"operation", "get_all",
+				"user_id", userID,
 				"error", err,
 			)
 		}
@@ -55,7 +57,7 @@ func (r *TodoRepository) GetAll(ctx context.Context) ([]todo.Todo, error) {
 		}
 	}
 
-	todos, err := r.repo.GetAll(ctx)
+	todos, err := r.repo.GetAll(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,10 +66,11 @@ func (r *TodoRepository) GetAll(ctx context.Context) ([]todo.Todo, error) {
 		return todos, nil
 	}
 
-	if err := r.cache.SetAll(ctx, todos); err != nil {
+	if err := r.cache.SetAll(ctx, userID, todos); err != nil {
 		slog.Error(
 			"failed to save todo list to cache",
 			"operation", "get_all",
+			"user_id", userID,
 			"error", err,
 		)
 	}
@@ -85,18 +88,19 @@ func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
 		return nil
 	}
 
-	r.invalidateTodo(ctx, todo.ID, "update")
+	r.invalidateTodo(ctx, todo.ID, todo.UserID, "update")
 
 	return nil
 }
 
-func (r *TodoRepository) GetByID(ctx context.Context, id string) (*todo.Todo, error) {
+func (r *TodoRepository) GetByID(ctx context.Context, userID, id string) (*todo.Todo, error) {
 	if r.cache != nil {
-		todo, found, err := r.cache.GetByID(ctx, id)
+		todo, found, err := r.cache.GetByID(ctx, userID, id)
 		if err != nil {
 			slog.Error(
 				"failed to get todo from cache",
 				"operation", "get_by_id",
+				"user_id", userID,
 				"todo_id", id,
 				"error", err,
 			)
@@ -107,7 +111,7 @@ func (r *TodoRepository) GetByID(ctx context.Context, id string) (*todo.Todo, er
 		}
 	}
 
-	todo, err := r.repo.GetByID(ctx, id)
+	todo, err := r.repo.GetByID(ctx, userID, id)
 	if err != nil {
 		return nil, err
 	}
@@ -116,10 +120,11 @@ func (r *TodoRepository) GetByID(ctx context.Context, id string) (*todo.Todo, er
 		return todo, nil
 	}
 
-	if err := r.cache.SetByID(ctx, todo); err != nil {
+	if err := r.cache.SetByID(ctx, userID, todo); err != nil {
 		slog.Error(
 			"failed to save todo to cache",
 			"operation", "get_by_id",
+			"user_id", userID,
 			"todo_id", id,
 			"error", err,
 		)
@@ -128,8 +133,8 @@ func (r *TodoRepository) GetByID(ctx context.Context, id string) (*todo.Todo, er
 	return todo, nil
 }
 
-func (r *TodoRepository) Delete(ctx context.Context, id string) error {
-	if err := r.repo.Delete(ctx, id); err != nil {
+func (r *TodoRepository) Delete(ctx context.Context, userID, id string) error {
+	if err := r.repo.Delete(ctx, userID, id); err != nil {
 		return err
 	}
 
@@ -137,24 +142,26 @@ func (r *TodoRepository) Delete(ctx context.Context, id string) error {
 		return nil
 	}
 
-	r.invalidateTodo(ctx, id, "delete")
+	r.invalidateTodo(ctx, id, userID, "delete")
 
 	return nil
 }
 
-func (r *TodoRepository) invalidateTodo(ctx context.Context, id, operation string) {
-	if err := r.cache.DeleteByID(ctx, id); err != nil {
+func (r *TodoRepository) invalidateTodo(ctx context.Context, userID, id, operation string) {
+	if err := r.cache.DeleteByID(ctx, userID, id); err != nil {
 		slog.Error(
 			"failed to delete todo from cache",
 			"operation", operation,
+			"user_id", userID,
 			"todo_id", id,
 			"error", err,
 		)
 	}
 
-	if err := r.cache.DeleteAll(ctx); err != nil {
+	if err := r.cache.DeleteAll(ctx, userID); err != nil {
 		slog.Error(
 			"failed to delete todo list from cache",
+			"user_id", userID,
 			"operation", operation,
 			"error", err,
 		)

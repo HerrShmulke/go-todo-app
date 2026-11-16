@@ -7,6 +7,7 @@ import (
 
 type Todo struct {
 	ID          string
+	UserID      string
 	Title       string
 	Description string
 	Completed   bool
@@ -14,17 +15,18 @@ type Todo struct {
 	UpdatedAt   time.Time
 }
 
-func NewTodo(id, title, description string) (*Todo, error) {
+func NewTodo(id, userID, title, description string) (*Todo, error) {
 	title = strings.TrimSpace(title)
 
 	if title == "" {
 		return nil, ErrEmptyTitle
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	return &Todo{
 		ID:          id,
+		UserID:      userID,
 		Title:       title,
 		Description: description,
 		Completed:   false,
@@ -68,6 +70,6 @@ func (t *Todo) Undone() {
 }
 
 func (t *Todo) updateLastUpdateTime() {
-	now := time.Now()
+	now := time.Now().UTC()
 	t.UpdatedAt = now
 }

@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS todos_user_id_idx;
+ALTER TABLE todos DROP COLUMN IF EXISTS user_id;

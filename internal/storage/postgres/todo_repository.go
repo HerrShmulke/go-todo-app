@@ -23,15 +23,16 @@ func NewTodoRepository(pool *pgxpool.Pool) *TodoRepository {
 func (r *TodoRepository) Create(ctx context.Context, item *todo.Todo) error {
 	query := `
 		INSERT INTO todos (
-			id, title, description, completed, created_at, updated_at
+			id, user_id, title, description, completed, created_at, updated_at
 		)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
 	_, err := r.pool.Exec(
 		ctx,
 		query,
 		item.ID,
+		item.UserID,
 		item.Title,
 		item.Description,
 		item.Completed,
@@ -46,14 +47,15 @@ func (r *TodoRepository) Create(ctx context.Context, item *todo.Todo) error {
 	return nil
 }
 
-func (r *TodoRepository) GetAll(ctx context.Context) ([]todo.Todo, error) {
+func (r *TodoRepository) GetAll(ctx context.Context, userID string) ([]todo.Todo, error) {
 	query := `
 		SELECT id, title, description, completed, created_at, updated_at 
 		FROM todos
+		WHERE user_id = $1
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query todos: %w", err)
 	}
@@ -92,7 +94,7 @@ func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
 				description = $2,
 				completed = $3,
 				updated_at = $4
-		WHERE id = $5
+		WHERE id = $5 AND user_id = $6
 	`
 
 	_, err := r.pool.Exec(
@@ -103,6 +105,7 @@ func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
 		todo.Completed,
 		todo.UpdatedAt,
 		todo.ID,
+		todo.UserID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update todo: %w", err)
@@ -111,16 +114,16 @@ func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
 	return nil
 }
 
-func (r *TodoRepository) GetByID(ctx context.Context, id string) (*todo.Todo, error) {
+func (r *TodoRepository) GetByID(ctx context.Context, userID, id string) (*todo.Todo, error) {
 	query := `
 		SELECT id, title, description, completed, created_at, updated_at
 		FROM todos
-		WHERE id = $1
+		WHERE id = $1 AND user_id = $2
 	`
 
 	var item todo.Todo
 
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
 		&item.ID,
 		&item.Title,
 		&item.Description,
@@ -139,10 +142,10 @@ func (r *TodoRepository) GetByID(ctx context.Context, id string) (*todo.Todo, er
 	return &item, nil
 }
 
-func (r *TodoRepository) Delete(ctx context.Context, id string) error {
-	query := `DELETE FROM todos WHERE id = $1`
+func (r *TodoRepository) Delete(ctx context.Context, userID, id string) error {
+	query := `DELETE FROM todos WHERE id = $1 AND user_id = $2`
 
-	result, err := r.pool.Exec(ctx, query, id)
+	result, err := r.pool.Exec(ctx, query, id, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete todo: %w", err)
 	}
@@ -154,5 +157,4 @@ func (r *TodoRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// Compile-time interface implementation check.
 var _ todo.Repository = (*TodoRepository)(nil)

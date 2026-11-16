@@ -12,6 +12,7 @@ type Config struct {
 	DatabaseURL string
 	WorkerCount int
 	RedisAddr   string
+	JWTSecret   string
 }
 
 func LoadFromEnv() (Config, error) {
@@ -53,10 +54,16 @@ func LoadFromEnv() (Config, error) {
 		return Config{}, errors.New("REDIS_ADDR is empty")
 	}
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		return Config{}, errors.New("JWT_SECRET is empty")
+	}
+
 	return Config{
 		HTTPPort:    httpPort,
 		DatabaseURL: databaseURL,
 		WorkerCount: workerCount,
 		RedisAddr:   redisAddr,
+		JWTSecret:   jwtSecret,
 	}, nil
 }

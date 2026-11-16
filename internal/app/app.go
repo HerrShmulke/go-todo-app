@@ -11,6 +11,9 @@ import (
 	"syscall"
 	"time"
 
+	"todo-app/internal/auth"
+	"todo-app/internal/auth/password"
+	"todo-app/internal/auth/token"
 	"todo-app/internal/config"
 	httpserver "todo-app/internal/http"
 	"todo-app/internal/redis"
@@ -64,6 +67,8 @@ func New(cfg config.Config) (*App, error) {
 
 	// Repository
 	repo := postgres.NewTodoRepository(pool)
+	userRepo := postgres.NewUserRepository(pool)
+	tokenRepo := postgres.NewRefreshTokenRepository(pool)
 
 	// Cached repository
 	var todoRepository todo.Repository = repo
@@ -72,10 +77,18 @@ func New(cfg config.Config) (*App, error) {
 	}
 
 	// Service
+	hasher := password.NewArgon2Hasher()
+	tokens, err := token.NewAccessToken([]byte(cfg.JWTSecret), 15*time.Minute, "todo-app")
+	if err != nil {
+		return nil, err
+	}
+
 	todoService := todo.NewService(todoRepository)
+	authService := auth.NewService(userRepo, hasher, tokens, tokenRepo)
 
 	// Handler
 	todoHandler := todo.NewHandler(todoService)
+	authHandler := auth.NewHandler(authService)
 
 	// Router
 	router := gin.Default()
@@ -83,7 +96,7 @@ func New(cfg config.Config) (*App, error) {
 	api := router.Group("/api")
 	v1 := api.Group("/v1")
 
-	httpserver.NewRouter(v1, todoHandler)
+	httpserver.NewRouter(v1, tokens, todoHandler, authHandler)
 
 	// HTTP server
 	application.server = httpserver.NewServer(router, cfg.HTTPPort)

@@ -3,6 +3,7 @@ package todo
 import (
 	"errors"
 	"net/http"
+	"todo-app/internal/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +19,14 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) Create(c *gin.Context) {
+	userID, ok := auth.UserIDFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
+
 	var req CreateTodoRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -27,7 +36,7 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 
-	todo, err := h.service.Create(c.Request.Context(), req.Title, req.Description)
+	todo, err := h.service.Create(c.Request.Context(), userID, req.Title, req.Description)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -37,7 +46,15 @@ func (h *Handler) Create(c *gin.Context) {
 }
 
 func (h *Handler) List(c *gin.Context) {
-	todos, err := h.service.GetAll(c.Request.Context())
+	userID, ok := auth.UserIDFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
+
+	todos, err := h.service.GetAll(c.Request.Context(), userID)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -53,9 +70,17 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 func (h *Handler) GetByID(c *gin.Context) {
+	userID, ok := auth.UserIDFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
+
 	id := c.Param("id")
 
-	todo, err := h.service.GetByID(c.Request.Context(), id)
+	todo, err := h.service.GetByID(c.Request.Context(), userID, id)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -65,6 +90,14 @@ func (h *Handler) GetByID(c *gin.Context) {
 }
 
 func (h *Handler) Update(c *gin.Context) {
+	userID, ok := auth.UserIDFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
+
 	var req UpdateTodoRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -74,7 +107,7 @@ func (h *Handler) Update(c *gin.Context) {
 		return
 	}
 
-	todo, err := h.service.Update(c.Request.Context(), req.ID, req.Title, req.Description)
+	todo, err := h.service.Update(c.Request.Context(), userID, req.ID, req.Title, req.Description)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -84,9 +117,17 @@ func (h *Handler) Update(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
+	userID, ok := auth.UserIDFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
+
 	id := c.Param("id")
 
-	if err := h.service.Delete(c.Request.Context(), id); err != nil {
+	if err := h.service.Delete(c.Request.Context(), userID, id); err != nil {
 		h.handleError(c, err)
 		return
 	}
@@ -96,8 +137,15 @@ func (h *Handler) Delete(c *gin.Context) {
 
 func (h *Handler) Done(c *gin.Context) {
 	id := c.Param("id")
+	userID, ok := auth.UserIDFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
 
-	todo, err := h.service.Done(c.Request.Context(), id)
+	todo, err := h.service.Done(c.Request.Context(), userID, id)
 	if err != nil {
 		h.handleError(c, err)
 		return
@@ -108,8 +156,15 @@ func (h *Handler) Done(c *gin.Context) {
 
 func (h *Handler) Undone(c *gin.Context) {
 	id := c.Param("id")
+	userID, ok := auth.UserIDFromContext(c.Request.Context())
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "unauthorized",
+		})
+		return
+	}
 
-	todo, err := h.service.Undone(c.Request.Context(), id)
+	todo, err := h.service.Undone(c.Request.Context(), userID, id)
 	if err != nil {
 		h.handleError(c, err)
 		return

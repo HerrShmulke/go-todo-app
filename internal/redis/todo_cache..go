@@ -32,8 +32,8 @@ func NewTodo(client *Client, ttl time.Duration) (*Todo, error) {
 	}, nil
 }
 
-func (c *Todo) GetByID(ctx context.Context, id string) (*todo.Todo, bool, error) {
-	data, err := c.client.rdb.Get(ctx, "todo:"+id).Result()
+func (c *Todo) GetByID(ctx context.Context, userID, id string) (*todo.Todo, bool, error) {
+	data, err := c.client.rdb.Get(ctx, fmt.Sprintf("todo:%s:%s", userID, id)).Result()
 	if errors.Is(err, redis.Nil) {
 		return nil, false, nil
 	}
@@ -51,7 +51,7 @@ func (c *Todo) GetByID(ctx context.Context, id string) (*todo.Todo, bool, error)
 	return &cachedTodo, true, nil
 }
 
-func (c *Todo) SetByID(ctx context.Context, todoItem *todo.Todo) error {
+func (c *Todo) SetByID(ctx context.Context, userID string, todoItem *todo.Todo) error {
 	if todoItem == nil {
 		return errors.New("todo is nil")
 	}
@@ -63,7 +63,7 @@ func (c *Todo) SetByID(ctx context.Context, todoItem *todo.Todo) error {
 
 	err = c.client.rdb.Set(
 		ctx,
-		"todo:"+todoItem.ID,
+		fmt.Sprintf("todo:%s:%s", userID, todoItem.ID),
 		string(data),
 		c.ttl,
 	).Err()
@@ -74,8 +74,8 @@ func (c *Todo) SetByID(ctx context.Context, todoItem *todo.Todo) error {
 	return nil
 }
 
-func (c *Todo) GetAll(ctx context.Context) ([]todo.Todo, bool, error) {
-	data, err := c.client.rdb.Get(ctx, "todos:all").Result()
+func (c *Todo) GetAll(ctx context.Context, userID string) ([]todo.Todo, bool, error) {
+	data, err := c.client.rdb.Get(ctx, fmt.Sprintf("todos:%s:all", userID)).Result()
 	if errors.Is(err, redis.Nil) {
 		return nil, false, nil
 	}
@@ -97,7 +97,7 @@ func (c *Todo) GetAll(ctx context.Context) ([]todo.Todo, bool, error) {
 	return todos, true, nil
 }
 
-func (c *Todo) SetAll(ctx context.Context, todos []todo.Todo) error {
+func (c *Todo) SetAll(ctx context.Context, userID string, todos []todo.Todo) error {
 	if todos == nil {
 		todos = make([]todo.Todo, 0)
 	}
@@ -109,7 +109,7 @@ func (c *Todo) SetAll(ctx context.Context, todos []todo.Todo) error {
 
 	err = c.client.rdb.Set(
 		ctx,
-		"todos:all",
+		fmt.Sprintf("todos:%s:all", userID),
 		string(data),
 		c.ttl,
 	).Err()
@@ -120,16 +120,18 @@ func (c *Todo) SetAll(ctx context.Context, todos []todo.Todo) error {
 	return nil
 }
 
-func (c *Todo) DeleteAll(ctx context.Context) error {
-	if err := c.client.rdb.Del(ctx, "todos:all").Err(); err != nil {
+func (c *Todo) DeleteAll(ctx context.Context, userID string) error {
+	key := fmt.Sprintf("todos:%s:all", userID)
+	if err := c.client.rdb.Del(ctx, key).Err(); err != nil {
 		return fmt.Errorf("failed to delete cache key todos:all: %w", err)
 	}
 
 	return nil
 }
 
-func (c *Todo) DeleteByID(ctx context.Context, id string) error {
-	if err := c.client.rdb.Del(ctx, "todo:"+id).Err(); err != nil {
+func (c *Todo) DeleteByID(ctx context.Context, userID, id string) error {
+	key := fmt.Sprintf("todo:%s:%s", userID, id)
+	if err := c.client.rdb.Del(ctx, key).Err(); err != nil {
 		return fmt.Errorf("failed to delete cache key todo:{id}: %w", err)
 	}
 
