@@ -88,7 +88,7 @@ func (r *TodoRepository) Update(ctx context.Context, todo *todo.Todo) error {
 		return nil
 	}
 
-	r.invalidateTodo(ctx, todo.ID, todo.UserID, "update")
+	r.invalidateTodo(ctx, todo.UserID, todo.ID, "update")
 
 	return nil
 }
@@ -142,7 +142,7 @@ func (r *TodoRepository) Delete(ctx context.Context, userID, id string) error {
 		return nil
 	}
 
-	r.invalidateTodo(ctx, id, userID, "delete")
+	r.invalidateTodo(ctx, userID, id, "delete")
 
 	return nil
 }
